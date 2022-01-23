@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/apple-yagi/congo/handler"
+	"github.com/apple-yagi/congo/scrape"
 )
 
 func main() {
@@ -16,8 +17,13 @@ func main() {
 		makeRequest("https://example2.com", &resp2),
 		makeRequest("https://example3.com/", &resp3),
 	}
-	fmt.Println(handler.RunAsyncAllowErrors(funcs...))
-	fmt.Println("After")
+
+	errs := (handler.RunAsyncAllowErrors(funcs...))
+	for i := range errs {
+		if errs[i] != nil {
+			fmt.Println("An error occurred in resp", i, ": ", errs[i])
+		}
+	}
 }
 
 func makeRequest(url string, response *http.Response) handler.GenericFunction {
@@ -26,8 +32,11 @@ func makeRequest(url string, response *http.Response) handler.GenericFunction {
 		if err != nil {
 			return err
 		}
-		fmt.Println(resp)
 		response = resp
+
+		// Scraping response
+		scrape.ScrapeText(response)
+
 		return nil
 	}
 }
